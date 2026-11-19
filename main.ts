@@ -32,6 +32,11 @@ const RETRY_MAX_MS = 2_000;
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** One lifecycle log line, prefixed so the entry's own lines stand out from the suite's output. */
+function note(line: string): void {
+  process.stdout.write(`[entry] ${line}\n`);
+}
+
 /** The wait after `attempt` failed requests: exponential from RETRY_INITIAL_MS, capped. */
 function retryDelay(attempt: number): number {
   return Math.min(RETRY_MAX_MS, RETRY_INITIAL_MS * 2 ** Math.min(attempt, 8));
@@ -85,14 +90,14 @@ async function main(): Promise<void> {
   });
   const address = server.address();
   if (address === null || typeof address === 'string') throw new Error('the server did not bind an ephemeral TCP port');
-  process.stdout.write(`[entry] listening on port ${address.port}\n`);
+  note(`listening on port ${address.port}`);
 
   await register(address.port);
-  process.stdout.write('[entry] registered; waiting for the env to say done\n');
+  note('registered; waiting for the env to say done');
 
   await waitForDone();
   server.close();
-  process.stdout.write('[entry] done\n');
+  note('done');
 }
 
 try {
